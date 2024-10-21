@@ -46,6 +46,14 @@ feature_mapping = {
 
 # Normalize and preprocess the selected features
 def preprocess_data(data, selected_features):
+    # Separate subfield processing from other features
+    if 'Subfield representation (2019)' in selected_features:
+        subfield_vectors = data['Subfield representation (2019)'].apply(preprocess_subfields).tolist()
+        subfield_df = pd.DataFrame(subfield_vectors, columns=all_subfields)
+        data = pd.concat([data, subfield_df], axis=1)
+        selected_features.remove('Subfield representation (2019)')
+        selected_features.extend(all_subfields)
+    
     # Replace NaNs with zeros before normalization to avoid issues
     data[selected_features] = data[selected_features].fillna(0)
     
@@ -157,60 +165,57 @@ if st.button("Find Similar Linguistics Departments"):
     st.dataframe(comparison_table)
 
     # Create a tabbed interface for charts
-    st.write("### Attribute Comparisons")
-    tab_names = [attr for attr in selected_features if attr != 'Subfield representation (2019)']
-    if tab_names:
-        tabs = st.tabs(tab_names)
-        for tab, attribute in zip(tabs, tab_names):
-            with tab:
-                sorted_data = original_data.sort_values(by=attribute, ascending=False)
-                num_universities = len(sorted_data)
-                plt.figure(figsize=(10, num_universities * 0.4))  # Increase height dynamically
+st.write("### Attribute Comparisons")
+# Filter out "Subfield representation (2019)" from tab_names
+tab_names = [attr for attr in selected_features if attr not in all_subfields]
+if tab_names:
+    tabs = st.tabs(tab_names)
+    for tab, attribute in zip(tabs, tab_names):
+        with tab:
+            sorted_data = original_data.sort_values(by=attribute, ascending=False)
+            num_universities = len(sorted_data)
+            plt.figure(figsize=(10, num_universities * 0.4))  # Increase height dynamically
 
-                # Extract colors and labels for the bars
-                bar_colors = [
-                    similar_dept_colors.get(univ, (neutral_color, ''))[0] 
-                    for univ in sorted_data['University Name']
-                ]
-                bar_labels = [
-                    similar_dept_colors.get(univ, (neutral_color, ''))[1]
-                    for univ in sorted_data['University Name']
-                ]
+            # Extract colors and labels for the bars
+            bar_colors = [
+                similar_dept_colors.get(univ, (neutral_color, ''))[0] 
+                for univ in sorted_data['University Name']
+            ]
+            bar_labels = [
+                similar_dept_colors.get(univ, (neutral_color, ''))[1]
+                for univ in sorted_data['University Name']
+            ]
 
-                bars = plt.barh(
-                    sorted_data['University Name'], sorted_data[attribute], color=bar_colors
+            bars = plt.barh(
+                sorted_data['University Name'], sorted_data[attribute], color=bar_colors
+            )
+            
+            # Add value labels to the bars (both the ranking numbers and the attribute value)
+            for bar, label in zip(bars, bar_labels):
+                plt.text(
+                    bar.get_width() / 2,
+                    bar.get_y() + bar.get_height() / 2,
+                    f'{label}',
+                    va='center',
+                    ha='center',
+                    weight='bold',
+                    fontsize=10,
+                    bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='round,pad=0.3')
                 )
-                
-                # Add value labels to the bars (both the ranking numbers and the attribute value)
-                for bar, label in zip(bars, bar_labels):
-                    plt.text(
-                        bar.get_width() / 2,
-                        bar.get_y() + bar.get_height() / 2,
-                        f'{label}',
-                        va='center',
-                        ha='center',
-                        weight='bold',
-                        fontsize=10,
-                        bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='round,pad=0.3')
-                    )
-                    plt.text(
-                        bar.get_width() + 0.25,
-                        bar.get_y() + bar.get_height() / 2,
-                        f'{bar.get_width():.2f}',
-                        va='center',
-                        ha='left'
-                    )
-                
-                plt.xlabel(attribute)
-                plt.ylabel('University Name')
-                plt.title(f'{attribute} Comparison')
-                plt.xlim(0, sorted_data[attribute].max() * 1.1)
-                
-                st.pyplot(plt)
-
-
-
-
+                plt.text(
+                    bar.get_width() + 0.25,
+                    bar.get_y() + bar.get_height() / 2,
+                    f'{bar.get_width():.2f}',
+                    va='center',
+                    ha='left'
+                )
+            
+            plt.xlabel(attribute)
+            plt.ylabel('University Name')
+            plt.title(f'{attribute} Comparison')
+            plt.xlim(0, sorted_data[attribute].max() * 1.1)
+            
+            st.pyplot(plt)
 
 
 # Add data sources at the bottom
