@@ -8,6 +8,12 @@ from scipy.spatial.distance import euclidean
 # Set page configuration for a better appearance
 st.set_page_config(page_title="Linguistics Department Similarity", layout="wide")
 
+# Link to the other app
+st.markdown(
+    "[Switch to Categorize Linguistics Departments as Peers/Aspirant Peers App](https://categorize-lx.streamlit.app)",
+    unsafe_allow_html=True
+)
+
 # Add this to make the charts more color-blind friendly
 import matplotlib as mpl
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["#377eb8", "#ff7f00", "#4daf4a", "#f781bf", "#a65628", "#984ea3", "#999999", "#e41a1c", "#dede00"])
