@@ -1,6 +1,11 @@
 import streamlit as st
 import pandas as pd
 
+st.markdown(
+    "[Switch to Similarity Comparison App](https://similar-lx.streamlit.app)",
+    unsafe_allow_html=True
+)
+
 # Load the CSV data
 data = pd.read_csv('universities_data.csv')
 
